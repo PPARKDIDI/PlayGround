@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Brick Studio — Build with bricks in 3D</title>
+  <meta name="description" content="A tactile 3D brick builder. Pick a brick, snap it onto the baseplate, and build a little world in your browser." />
+  <meta name="theme-color" content="#070a12" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='7' y='17' width='34' height='23' rx='6' fill='%23d21f2b'/%3E%3Crect x='7' y='17' width='34' height='8' rx='4' fill='%23f0483f'/%3E%3Cellipse cx='17' cy='15' rx='5' ry='3.2' fill='%23f0483f'/%3E%3Cellipse cx='32' cy='15' rx='5' ry='3.2' fill='%23f0483f'/%3E%3Cellipse cx='17' cy='14' rx='3.4' ry='2' fill='%23ff8b7a'/%3E%3Cellipse cx='32' cy='14' rx='3.4' ry='2' fill='%23ff8b7a'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <canvas id="scene" aria-label="3D brick building area"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="7" y="17" width="34" height="23" rx="6" fill="#c4202b"/>
+        <rect x="7" y="17" width="34" height="8" rx="4" fill="#ef4a3d"/>
+        <ellipse cx="17" cy="15" rx="5" ry="3.2" fill="#ef4a3d"/>
+        <ellipse cx="32" cy="15" rx="5" ry="3.2" fill="#ef4a3d"/>
+        <ellipse cx="17" cy="14" rx="3.4" ry="2" fill="#ff9c86"/>
+        <ellipse cx="32" cy="14" rx="3.4" ry="2" fill="#ff9c86"/>
+        <rect x="11" y="30" width="26" height="3" rx="1.5" fill="#8f121b" opacity=".45"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Brick Studio</h1>
+        <p>Snap together a little world</p>
+      </div>
+    </div>
+
+    <div class="head-actions">
+      <div class="count-chip" id="countChip" title="Bricks on the baseplate">
+        <span class="count-dot" aria-hidden="true"></span>
+        <span id="brickCount">0</span>
+        <span class="count-label">bricks</span>
+      </div>
+      <button class="icon-btn" id="soundBtn" type="button" aria-pressed="true" title="Toggle sound (M)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span class="lbl">Sound</span>
+      </button>
+      <button class="icon-btn" id="resetBtn" type="button" title="Reset camera (F)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 2 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M3 4v6h6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="lbl">View</span>
+      </button>
+      <button class="icon-btn" id="saveBtn" type="button" title="Save this build">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 4v5h7V4M8 20v-6h8v6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span class="lbl">Save</span>
+      </button>
+      <button class="icon-btn" id="loadBtn" type="button" title="Load the saved build">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 7V5h6l2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span class="lbl">Load</span>
+      </button>
+      <button class="icon-btn" id="pngBtn" type="button" title="Export a PNG snapshot">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="9.5" r="1.6" fill="currentColor"/><path d="m4 18 5-5 4 4 3-3 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span class="lbl">PNG</span>
+      </button>
+      <button class="icon-btn" id="helpBtn" type="button" title="How to build (H)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.9 2.1c-.9.6-1.5 1.1-1.5 2.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></svg>
+        <span class="lbl">Help</span>
+      </button>
+    </div>
+  </header>
+
+  <aside class="panel" aria-label="Builder controls">
+    <section class="group">
+      <div class="group-head">
+        <span>Brick</span>
+        <span class="group-value" id="sizeLabel">2×4</span>
+      </div>
+      <div class="sizes" id="sizes" role="group" aria-label="Brick size"></div>
+    </section>
+
+    <section class="group">
+      <div class="group-head">
+        <span>Colour</span>
+        <span class="group-value" id="colorLabel">Ocean</span>
+      </div>
+      <div class="swatches" id="swatches" role="group" aria-label="Brick colour"></div>
+    </section>
+
+    <section class="group">
+      <div class="segmented" role="group" aria-label="Tool">
+        <button type="button" data-tool="build" class="active" aria-pressed="true">Build</button>
+        <button type="button" data-tool="erase" aria-pressed="false">Erase</button>
+      </div>
+      <div class="row3">
+        <button type="button" class="tool-btn" id="rotateBtn" title="Rotate brick (R)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Rotate</span>
+        </button>
+        <button type="button" class="tool-btn" id="undoBtn" title="Undo (Ctrl+Z)" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 5 11l4 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 11h9a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          <span>Undo</span>
+        </button>
+        <button type="button" class="tool-btn" id="redoBtn" title="Redo (Ctrl+Shift+Z)" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 11h-9a5 5 0 0 0 0 10h2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          <span>Redo</span>
+        </button>
+      </div>
+      <button type="button" id="clearBtn" class="clear-btn">Clear baseplate</button>
+    </section>
+  </aside>
+
+  <div class="hint" id="hint">
+    <span class="hint-dot" aria-hidden="true"></span>
+    <span class="hint-desktop">Drag to orbit <span class="sep">·</span> scroll to zoom <span class="sep">·</span> click to place</span>
+    <span class="hint-touch">Drag to orbit <span class="sep">·</span> tap to place</span>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal" id="helpModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <button type="button" class="modal-close" id="helpClose" aria-label="Close help">×</button>
+      <p class="eyebrow">Welcome to the studio</p>
+      <h2 id="helpTitle">Build anything,<br />one brick at a time.</h2>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><div><strong>Choose a brick</strong><p>Sizes from a single 1×1 stud to a chunky 2×4.</p></div></div>
+        <div class="step"><span class="step-num">2</span><div><strong>Snap it down</strong><p>Click the baseplate or the top of a brick. The glowing ghost shows where it lands.</p></div></div>
+        <div class="step"><span class="step-num">3</span><div><strong>Keep going</strong><p>Switch to Erase to lift bricks off. Rotate with <kbd>R</kbd> to turn a brick a quarter turn.</p></div></div>
+      </div>
+      <div class="shortcuts">
+        <div><kbd>B</kbd><kbd>E</kbd><span>Build / Erase</span></div>
+        <div><kbd>R</kbd><span>Rotate brick</span></div>
+        <div><kbd>1</kbd>–<kbd>6</kbd><span>Pick a size</span></div>
+        <div><kbd>Ctrl</kbd><kbd>Z</kbd><span>Undo</span></div>
+        <div><kbd>F</kbd><span>Reset view</span></div>
+        <div><kbd>H</kbd><span>This panel</span></div>
+      </div>
+      <p class="footnote">Your build saves automatically in this browser. Press <strong>Save</strong> to keep a separate copy you can reload any time.</p>
+    </div>
+  </div>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
